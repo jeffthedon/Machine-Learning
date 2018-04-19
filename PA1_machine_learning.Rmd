@@ -1,8 +1,9 @@
 ---
-title: 
 author: "JeffTheDon-Jeffery B. Donaven"
 date: "April 5, 2018"
-output: html_document
+output:
+  html_document: default
+  keep_md: TRUE
 ---
 
 ```{r setup, include=FALSE}
