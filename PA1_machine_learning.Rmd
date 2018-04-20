@@ -2,16 +2,18 @@
 author: "JeffTheDon-Jeffery B. Donaven"
 date: "April 5, 2018"
 output:
+  word_document: default
+  keep_md: yes
   html_document: default
-  keep_md: TRUE
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-options(knitr.table.format = "html")
 setwd("C:/Users/geo/Desktop/Jeff/Coursera/Machine_Learning/week4")
 library(ggplot2); library(caret); library(knitr); library(kableExtra)
 ```
+<img src="machine learning.png" style="position:absolute;top:0px;right:0px;" />
+
 
 # **Prediction of Errors in the Execution of Assorted Weight-Training Exercises**
 
@@ -124,7 +126,6 @@ table_1 <- data.frame("Type_of_DataSet" = c("Training DataSet","Testing DataSet"
                       , "Number of Rows" = c(dim(train_1_set)[1], dim(test_1_set)[1], dim(validate_1_set)[1]))
 x <- kable(table_1, caption = "Breakdown of Training/Testing & Validation DataSets", align = "c")
 kable_styling(x, "striped", position = "left", font_size = 10)
-print(x)
 ```
         
 ## **Creation of Models**
@@ -138,10 +139,9 @@ fit_all_train_model = train(classe ~ ., data = train_1_set, method = "rf", trCon
 ### Assessment of Model 1 - Training DataSet
 
 Upon examination of the results, I find it to be pretty accurate with a value of approximately 98.5%.
-```{r, model_1_results_1a}, results = "asis"}
+```{r, model_1_results_1a}, results = "asis", echo = FALSE}
 model_1_results <- kable(fit_all_train_model$results)
 kable_styling(model_1_results, "striped", position = "left", font_size = 10)
-print(model_1_results)
 ```
 
 
@@ -150,7 +150,6 @@ The table below shows which predictions of the *Training DataSet* were correct, 
 err_in_train_sample <- fit_all_train_model$finalModel$confusion
 table_2 <- kable(err_in_train_sample)
 kable_styling(table_2, "striped", position = "left", font_size = 10)
-print(table_2)
 ```
 
 I expect the error out of sample to be slightly less than the error in sample that was measured above.
@@ -163,15 +162,14 @@ accuracy_of_model <- confusionMatrix(pred_test_set, test_1_set$classe)
 ```{r, model_2_results, results = "asis", echo = FALSE}
 table_3 <- kable(err_out_of_sample)
 kable_styling(table_3, "striped", position = "left", font_size = 10)
-print(table_3)
 ```
+
 As predicted, the **error out of sample** for the *Test DataSet* via the table produced above, shows a misclassification rate of **1.22%** with an Accuracy Rate for this DataSet of **98.78%** with **84** misclassifacations out of a total possible **6866**.  This confirmed my hypothesis of it being less accurate than the **error in sample**.
 
 The **confusionMatrix** function summarizes in detail the **accuracy, sensitivity, specificty** as well as other *parameters* of my model's prediction by *class*.  Let's take a look at this:
-```{r, accuracy_of_model_table}
+```{r, accuracy_of_model_table, echo = FALSE}
 table_4 <- kable(accuracy_of_model$byClass)
 kable_styling(table_4, "striped", position = "left", font_size = 10)
-print(table_4)
 ```
 
 
@@ -186,18 +184,17 @@ Next I want to check which features are highly **correlated** so as to decide wh
 importance <- varImp(fit_all_train_model, scale = FALSE)
 plot(importance)
 ```
-```{r, correlated_variables}
+```{r, correlated_variables, echo = FALSE}
 cor_vars <- cor(train_1_set[,-53])
 summary_of_cor_vars <- summary(cor_vars[upper.tri(cor_vars)])
 higher_cor<- findCorrelation(cor_vars, cutoff= .80)
 higher_cor_vars <- as.data.frame(names(train_1_set)[higher_cor])
 cor_table <- kable(higher_cor_vars)
 kable_styling(cor_table, "striped", position = "left", font_size = 10)
-print(cor_table)
 ```
 So, can I gain anymore precision in my model with the above found correlated variables?  I shall run another model to see if it is possible with the above listed 13 variables which is the top 20% of variables to find out:
 
-```{r, final_model_13, cache = TRUE, results = "hide", warning = FALSE, message = FALSE}
+```{r, final_model_13, cache = TRUE, results = "hide"}
 final_model <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
 fit_train_13_model= train(classe ~ accel_belt_z + roll_belt + accel_belt_y + accel_dumbbell_x + accel_belt_x + pitch_belt + accel_dumbbell_x + accel_arm_x + magnet_arm_y + gyros_forearm_y + gyros_dumbbell_x + gyros_dumbbell_z + gyros_arm_x, data = train_1_set, method = "rf", trControl = final_model)
 ```
@@ -206,23 +203,24 @@ fit_train_13_model= train(classe ~ accel_belt_z + roll_belt + accel_belt_y + acc
 pred_model_13 <- predict(fit_train_13_model, newdata = test_1_set)
 accuracy_model_13 <- confusionMatrix(pred_model_13, test_1_set$classe)
 ```
-```{r, table_5_model_13}
+
+```{r, table_5_model_13, echo = FALSE}
 table_5 <- kable(accuracy_model_13$byClass)
 kable_styling(table_5, "striped", position = "left", font_size = 10)
-print(table_5)
 ```
+
 Well, running the model with the 13 correlated variables showed a slight decrease in accuracy, specificity and sensitivity.  Although the numbers went down, I want to run one more model, this time with only 6 variables to see if I can get a rise with the numbers.  I think the numbers will continue to go down a bit though.
+
 ```{r, final_model_six, cache = TRUE, results = "hide", warning = FALSE, message = FALSE}
 fit_train_6_model = train(classe ~ accel_belt_z + roll_belt + accel_belt_y + accel_dumbbell_x + accel_belt_x + pitch_belt, data = train_1_set, method = "rf", trControl = final_model)
 ```
-```{r, results_model_6, results = "asis", warning = FALSE, message = FALSE}
+```{r, results_model_6, results = "asis"}
 pred_model_6 <- predict(fit_train_6_model, newdata = test_1_set)
 accuracy_model_6 <- confusionMatrix(pred_model_6, test_1_set$classe)
 ```
-```{r, table_6_model_6}
+```{r, table_6_model_6, echo = FALSE}
 table_6 <- kable(accuracy_model_6$byClass)
 kable_styling(table_6, "striped", position = "left", font_size = 10)
-print(table_6)
 ```
 
 As predicted, sensitivity, specificity and accuracy all suffered from a decrease in the numbers with 6 variables.  However, this model has better interpreability, scalability and faster processing time even though there is an increase in bias which reduced my capacity to predict accurately.
@@ -237,15 +235,15 @@ accuracy_val_all <-confusionMatrix(pred_val_test_all, validate_1_set$classe)
 pred_model_6b <- predict(fit_train_6_model, newdata = validate_1_set)
 accuracy_model_6b <- confusionMatrix(pred_model_6b, validate_1_set$classe)
 ```
-```{r, table_val_all_vs_model_6b}
+```{r, table_val_all_vs_model_6b, echo = FALSE}
 table_val_all <- kable(accuracy_val_all$byClass)
 kable_styling(table_val_all, "striped", position = "left", font_size = 10)
-print(table_val_all)
 table_model_6b <- kable(accuracy_model_6b$byClass)
 kable_styling(table_model_6b, "striped", position = "left", font_size = 10)
-print(table_model_6b)
 ```
+
 ## Conclusions
+
 Classification of Errors using predictive modeling on the **HAR Weightlifting Dataset** showed high **sensitivity**, **specificity** and **accuracy** with the correct execution of lifting the dumbbells.  It needds to be pointed out though, that the **errors** in the movement of the excercises were performed *purposefully*.  Because of this fact, different results could be retained when the errors in the movements are committed *without* intent to commit the error in the first place.
 
 Please see the appendix for different plots which will show the misclassification of errors by the the models on the Validation Test Set.
